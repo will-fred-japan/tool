@@ -52,6 +52,25 @@
             border-color: var(--accent-color);
         }
 
+        /* Added style for the expand button positioned at the top-right */
+        .expand-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 4px 8px;
+            font-size: 10px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: #444;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .expand-btn:hover {
+            color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
         textarea {
             width: 100%;
             height: 450px;
@@ -67,7 +86,7 @@
             margin-top: 15px;
             margin-bottom: 1.2rem;
             outline: none;
-            transition: border-color 0.2s;
+            transition: border-color 0.2s, height 0.2s; /* Added height transition for a smooth stretch */
         }
 
         textarea:focus { border-color: #444; }
@@ -130,6 +149,7 @@
 
 <div class="container">
     <button class="new-tab-btn" onclick="window.open(window.location.href, '_blank')">+ Tab</button>
+    <button class="expand-btn" onclick="toggleHeight()">↕ Expand</button>
     
     <textarea id="textInput" placeholder="READY FOR INPUT..."></textarea>
     
@@ -164,6 +184,15 @@
     };
 
     area.addEventListener('input', updateStats);
+
+    // Function to double/reset the textarea height
+    function toggleHeight() {
+        if (area.style.height === "900px") {
+            area.style.height = "450px";
+        } else {
+            area.style.height = "900px";
+        }
+    }
 
     function updateStats() {
         const val = area.value;
