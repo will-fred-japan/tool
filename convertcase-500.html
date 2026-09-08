@@ -52,7 +52,6 @@
             border-color: var(--accent-color);
         }
 
-        /* Added style for the expand button positioned at the top-right */
         .expand-btn {
             position: absolute;
             top: 10px;
@@ -71,7 +70,8 @@
             border-color: var(--accent-color);
         }
 
-        textarea {
+        /* Editor container replacing standard textarea */
+        .editor {
             width: 100%;
             height: 450px;
             padding: 20px;
@@ -80,16 +80,25 @@
             border: 1px solid var(--border-color);
             border-radius: 2px;
             font-size: 16px;
-            line-height: 1.1; /* Further reduced line height */
-            resize: vertical;
+            line-height: 1.2;
             box-sizing: border-box;
             margin-top: 15px;
             margin-bottom: 1.2rem;
             outline: none;
-            transition: border-color 0.2s, height 0.2s; /* Added height transition for a smooth stretch */
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: inherit;
+            transition: border-color 0.2s, height 0.2s;
         }
 
-        textarea:focus { border-color: #444; }
+        .editor:focus { border-color: #444; }
+
+        /* Styling for empty editor placeholder */
+        .editor[data-placeholder]:empty:before {
+            content: attr(data-placeholder);
+            color: #555;
+        }
 
         .controls {
             display: grid;
@@ -106,7 +115,6 @@
             border: 1px solid var(--border-color);
             border-radius: 2px;
             font-size: 12px;
-            /* Removed text-transform: uppercase to allow 'lower' to stay lowercase */
             letter-spacing: 1px;
             transition: all 0.15s;
         }
@@ -117,7 +125,6 @@
             border-color: var(--accent-color);
         }
 
-        /* Specific fix to ensure 'lower' stays lowercase and 'UPPER' stays uppercase */
         .case-btn-lower { text-transform: lowercase; }
         .case-btn-upper { text-transform: uppercase; }
 
@@ -151,7 +158,7 @@
     <button class="new-tab-btn" onclick="window.open(window.location.href, '_blank')">+ Tab</button>
     <button class="expand-btn" onclick="toggleHeight()">↕ Expand</button>
     
-    <textarea id="textInput" placeholder="READY FOR INPUT..."></textarea>
+    <div id="textInput" class="editor" contenteditable="true" data-placeholder="READY FOR INPUT..."></div>
     
     <div class="controls">
         <button onclick="sentenceCase()">Sentence</button>
@@ -175,84 +182,69 @@
     </div>
 </div>
 
-<script>
-    const area = document.getElementById('textInput');
+<script type="module">
+    import { CodeJar } from './codejar.min.js';
+
+    const editorElement = document.getElementById('textInput');
     const counters = {
         char: document.getElementById('charCount'),
         word: document.getElementById('wordCount'),
         line: document.getElementById('lineCount')
     };
 
-    area.addEventListener('input', updateStats);
+    // Initialize CodeJar with tab spacing (4 spaces)
+    const jar = CodeJar(editorElement, () => {}, {
+        tab: '    '
+    });
 
-    // Function to double/reset the textarea height
-    function toggleHeight() {
-        if (area.style.height === "800px") {
-            area.style.height = "450px";
+    jar.onUpdate(updateStats);
+
+    window.toggleHeight = function() {
+        if (editorElement.style.height === "800px") {
+            editorElement.style.height = "450px";
         } else {
-            area.style.height = "800px";
+            editorElement.style.height = "800px";
         }
-    }
+    };
 
     function updateStats() {
-        const val = area.value;
+        const val = jar.toString();
         counters.char.innerText = val.length;
         counters.word.innerText = val.trim() ? val.trim().split(/\s+/).length : 0;
         counters.line.innerText = val ? val.split(/\n/).length : 0;
     }
 
-    function sentenceCase() {
-        let text = area.value.toLowerCase();
-        area.value = text.replace(/(^\s*\w|[\.\!\?]\s*\w|\n\s*\w)/g, c => c.toUpperCase());
+    function transformText(fn) {
+        const currentText = jar.toString();
+        jar.updateCode(fn(currentText));
         updateStats();
     }
 
-    function lowerCase() {
-        area.value = area.value.toLowerCase();
-        updateStats();
-    }
+    window.sentenceCase = () => transformText(text => 
+        text.toLowerCase().replace(/(^\s*\w|[\.\!\?]\s*\w|\n\s*\w)/g, c => c.toUpperCase())
+    );
 
-    function upperCase() {
-        area.value = area.value.toUpperCase();
-        updateStats();
-    }
+    window.lowerCase = () => transformText(text => text.toLowerCase());
+    window.upperCase = () => transformText(text => text.toUpperCase());
+    window.capitalizedCase = () => transformText(text => text.toLowerCase().replace(/\b\w/g, l => l.toUpperCase()));
+    window.alternatingCase = () => transformText(text => text.split("").map((c, i) => i % 2 === 0 ? c.toUpperCase() : c.toLowerCase()).join(""));
+    window.titleCase = () => transformText(text => text.toLowerCase().replace(/\b\w/g, l => l.toUpperCase()));
+    window.inverseCase = () => transformText(text => text.split("").map(c => c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()).join(""));
 
-    function capitalizedCase() {
-        area.value = area.value.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
-        updateStats();
-    }
-
-    function alternatingCase() {
-        area.value = area.value.split("").map((c, i) => i % 2 === 0 ? c.toUpperCase() : c.toLowerCase()).join("");
-        updateStats();
-    }
-
-    function titleCase() {
-        area.value = area.value.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
-        updateStats();
-    }
-
-    function inverseCase() {
-        area.value = area.value.split("").map(c => 
-            c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()
-        ).join("");
-        updateStats();
-    }
-
-    async function copyText() {
+    window.copyText = async function() {
         try {
-            await navigator.clipboard.writeText(area.value);
+            await navigator.clipboard.writeText(jar.toString());
             const btn = document.querySelector('.copy-btn');
             btn.innerText = "COPIED";
             setTimeout(() => btn.innerText = "📋 Copy", 1000);
         } catch (err) {}
-    }
+    };
 
-    function clearText() {
-        area.value = "";
+    window.clearText = function() {
+        jar.updateCode("");
         updateStats();
-        area.focus();
-    }
+        editorElement.focus();
+    };
 </script>
 
 </body>
