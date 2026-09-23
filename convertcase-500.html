@@ -22,6 +22,7 @@
             justify-content: center;
             padding: 20px;
             margin: 0;
+            box-sizing: border-box;
         }
 
         .container {
@@ -32,13 +33,14 @@
             border-radius: 4px;
             border: 1px solid var(--border-color);
             position: relative;
-            transition: all 0.3s ease;
+            box-sizing: border-box;
+            transition: max-width 0.3s ease, min-height 0.3s ease;
         }
 
         /* Styles applied when expanded */
         .container.expanded {
             max-width: 100%;
-            min-height: 90vh;
+            min-height: calc(100vh - 40px);
         }
 
         .new-tab-btn {
@@ -80,21 +82,30 @@
 </head>
 <body>
 
-    <div class="container">
+    <div class="container" id="mainContainer">
         <button class="new-tab-btn">New Tab</button>
-        <button class="expand-btn">Expand</button>
+        <button class="expand-btn" id="expandBtn">Expand</button>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const container = document.querySelector('.container');
-            
-            // Check viewport height on load
+            const container = document.getElementById('mainContainer');
+            const expandBtn = document.getElementById('expandBtn');
+
+            // Apply default state based on viewport height (> 800px)
             if (window.innerHeight > 800) {
                 container.classList.add('expanded');
+                expandBtn.textContent = 'Collapse';
             } else {
                 container.classList.remove('expanded');
+                expandBtn.textContent = 'Expand';
             }
+
+            // Manual toggle button handler
+            expandBtn.addEventListener('click', () => {
+                const isExpanded = container.classList.toggle('expanded');
+                expandBtn.textContent = isExpanded ? 'Collapse' : 'Expand';
+            });
         });
     </script>
 </body>
