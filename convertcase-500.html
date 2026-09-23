@@ -22,7 +22,6 @@
             justify-content: center;
             padding: 20px;
             margin: 0;
-            box-sizing: border-box;
         }
 
         .container {
@@ -33,14 +32,6 @@
             border-radius: 4px;
             border: 1px solid var(--border-color);
             position: relative;
-            box-sizing: border-box;
-            transition: max-width 0.3s ease, min-height 0.3s ease;
-        }
-
-        /* Styles applied when expanded */
-        .container.expanded {
-            max-width: 100%;
-            min-height: calc(100vh - 40px);
         }
 
         .new-tab-btn {
@@ -61,6 +52,7 @@
             border-color: var(--accent-color);
         }
 
+        /* Added style for the expand button positioned at the top-right */
         .expand-btn {
             position: absolute;
             top: 10px;
@@ -78,35 +70,195 @@
             color: var(--accent-color);
             border-color: var(--accent-color);
         }
+
+        textarea {
+            width: 100%;
+            height: 450px;
+            padding: 20px;
+            background-color: var(--input-bg);
+            color: #dcdcdc;
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            font-size: 16px;
+            line-height: 1.1; /* Further reduced line height */
+            resize: vertical;
+            box-sizing: border-box;
+            margin-top: 15px;
+            margin-bottom: 1.2rem;
+            outline: none;
+            transition: border-color 0.2s, height 0.2s; /* Added height transition for a smooth stretch */
+        }
+
+        textarea:focus { border-color: #444; }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 8px;
+            margin-bottom: 1rem;
+        }
+
+        button {
+            padding: 10px;
+            cursor: pointer;
+            background-color: #1a1a1a;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            font-size: 12px;
+            /* Removed text-transform: uppercase to allow 'lower' to stay lowercase */
+            letter-spacing: 1px;
+            transition: all 0.15s;
+        }
+
+        button:hover {
+            background-color: var(--accent-color);
+            color: #fff;
+            border-color: var(--accent-color);
+        }
+
+        /* Specific fix to ensure 'lower' stays lowercase and 'UPPER' stays uppercase */
+        .case-btn-lower { text-transform: lowercase; }
+        .case-btn-upper { text-transform: uppercase; }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .copy-btn { border-color: #1b5e20; color: #4caf50; flex: 3; }
+        .copy-btn:hover { background-color: #1b5e20; color: #fff; }
+        
+        .clear-btn { border-color: #b71c1c; color: #ef5350; flex: 1; }
+        .clear-btn:hover { background-color: #b71c1c; color: #fff; }
+
+        .stats {
+            margin-top: 15px;
+            font-size: 11px;
+            color: #444;
+            text-align: left;
+            text-transform: uppercase;
+        }
+
+        .count { color: #666; margin-left: 4px; margin-right: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="container" id="mainContainer">
-        <button class="new-tab-btn">New Tab</button>
-        <button class="expand-btn" id="expandBtn">Expand</button>
+<div class="container">
+    <button class="new-tab-btn" onclick="window.open(window.location.href, '_blank')">+ Tab</button>
+    <button class="expand-btn" onclick="toggleHeight()">↕ Expand</button>
+    
+    <textarea id="textInput" placeholder="READY FOR INPUT..."></textarea>
+    
+    <div class="controls">
+        <button onclick="sentenceCase()">Sentence</button>
+        <button class="case-btn-lower" onclick="lowerCase()">lower</button>
+        <button class="case-btn-upper" onclick="upperCase()">UPPER</button>
+        <button onclick="capitalizedCase()">Capitalized</button>
+        <button onclick="alternatingCase()">aLtErNaTe</button>
+        <button onclick="titleCase()">Title</button>
+        <button onclick="inverseCase()">InVeRsE</button>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const container = document.getElementById('mainContainer');
-            const expandBtn = document.getElementById('expandBtn');
+    <div class="action-btns">
+        <button class="copy-btn" onclick="copyText()">📋 Copy</button>
+        <button class="clear-btn" onclick="clearText()">🗑️ Clear</button>
+    </div>
 
-            // Apply default state based on viewport height (> 800px)
-            if (window.innerHeight > 800) {
-                container.classList.add('expanded');
-                expandBtn.textContent = 'Collapse';
-            } else {
-                container.classList.remove('expanded');
-                expandBtn.textContent = 'Expand';
-            }
+    <div class="stats">
+        CHARS:<span id="charCount" class="count">0</span>
+        WORDS:<span id="wordCount" class="count">0</span>
+        LINES:<span id="lineCount" class="count">0</span>
+    </div>
+</div>
 
-            // Manual toggle button handler
-            expandBtn.addEventListener('click', () => {
-                const isExpanded = container.classList.toggle('expanded');
-                expandBtn.textContent = isExpanded ? 'Collapse' : 'Expand';
-            });
-        });
-    </script>
+<script>
+    const area = document.getElementById('textInput');
+    const counters = {
+        char: document.getElementById('charCount'),
+        word: document.getElementById('wordCount'),
+        line: document.getElementById('lineCount')
+    };
+
+    // Auto-expand on load if viewport height is greater than 800px
+    if (window.innerHeight > 800) {
+        area.style.height = "850px";
+    }
+
+    area.addEventListener('input', updateStats);
+
+    // Function to double/reset the textarea height
+    function toggleHeight() {
+        if (area.style.height === "800px") {
+            area.style.height = "450px";
+        } else {
+            area.style.height = "800px";
+        }
+    }
+
+    function updateStats() {
+        const val = area.value;
+        counters.char.innerText = val.length;
+        counters.word.innerText = val.trim() ? val.trim().split(/\s+/).length : 0;
+        counters.line.innerText = val ? val.split(/\n/).length : 0;
+    }
+
+    function sentenceCase() {
+        let text = area.value.toLowerCase();
+        area.value = text.replace(/(^\s*\w|[\.\!\?]\s*\w|\n\s*\w)/g, c => c.toUpperCase());
+        updateStats();
+    }
+
+    function lowerCase() {
+        area.value = area.value.toLowerCase();
+        updateStats();
+    }
+
+    function upperCase() {
+        area.value = area.value.toUpperCase();
+        updateStats();
+    }
+
+    function capitalizedCase() {
+        area.value = area.value.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+        updateStats();
+    }
+
+    function alternatingCase() {
+        area.value = area.value.split("").map((c, i) => i % 2 === 0 ? c.toUpperCase() : c.toLowerCase()).join("");
+        updateStats();
+    }
+
+    function titleCase() {
+        area.value = area.value.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+        updateStats();
+    }
+
+    function inverseCase() {
+        area.value = area.value.split("").map(c => 
+            c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()
+        ).join("");
+        updateStats();
+    }
+
+    async function copyText() {
+        try {
+            await navigator.clipboard.writeText(area.value);
+            const btn = document.querySelector('.copy-btn');
+            btn.innerText = "COPIED";
+            setTimeout(() => btn.innerText = "📋 Copy", 1000);
+        } catch (err) {}
+    }
+
+    function clearText() {
+        area.value = "";
+        updateStats();
+        area.focus();
+    }
+</script>
+
 </body>
 </html>
