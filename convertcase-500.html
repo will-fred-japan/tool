@@ -4,18 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>convertcase</title>
+    <!-- Google Material Symbols & Modern Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <style>
         :root {
             --bg-color: #0a0a0a;
             --container-bg: #121212;
-            --text-color: #b0b0b0;
-            --border-color: #222;
+            --text-color: #e0e0e0;
+            --border-color: #262626;
             --accent-color: #8a2be2;
             --input-bg: #0e0e0e;
         }
 
         body {
-            font-family: 'Consolas', 'Monaco', 'Segoe UI', monospace;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             display: flex;
@@ -29,22 +32,25 @@
             max-width: 1000px;
             background: var(--container-bg);
             padding: 1.5rem;
-            border-radius: 4px;
+            border-radius: 8px;
             border: 1px solid var(--border-color);
             position: relative;
         }
 
         .new-tab-btn {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            padding: 4px 8px;
-            font-size: 10px;
+            top: 12px;
+            left: 12px;
+            padding: 5px 10px;
+            font-size: 11px;
+            font-weight: 500;
             background: transparent;
             border: 1px solid var(--border-color);
-            color: #444;
+            color: #888;
             cursor: pointer;
+            border-radius: 4px;
             text-transform: uppercase;
+            transition: all 0.15s;
         }
         
         .new-tab-btn:hover {
@@ -54,15 +60,18 @@
 
         .expand-btn {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 4px 8px;
-            font-size: 10px;
+            top: 12px;
+            right: 12px;
+            padding: 5px 10px;
+            font-size: 11px;
+            font-weight: 500;
             background: transparent;
             border: 1px solid var(--border-color);
-            color: #444;
+            color: #888;
             cursor: pointer;
+            border-radius: 4px;
             text-transform: uppercase;
+            transition: all 0.15s;
         }
 
         .expand-btn:hover {
@@ -75,11 +84,12 @@
             height: 450px;
             padding: 20px;
             background-color: var(--input-bg);
-            color: #dcdcdc;
+            color: #f0f0f0;
             border: 1px solid var(--border-color);
-            border-radius: 2px;
-            font-size: 16px;
-            line-height: 1.1;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            line-height: 1.4;
             resize: vertical;
             box-sizing: border-box;
             margin-top: 15px;
@@ -88,7 +98,7 @@
             transition: border-color 0.2s, height 0.2s;
         }
 
-        textarea:focus { border-color: #444; }
+        textarea:focus { border-color: #555; }
 
         .controls {
             display: grid;
@@ -103,10 +113,15 @@
             background-color: #1a1a1a;
             color: var(--text-color);
             border: 1px solid var(--border-color);
-            border-radius: 2px;
-            font-size: 12px;
-            letter-spacing: 1px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
             transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
         button:hover {
@@ -115,35 +130,98 @@
             border-color: var(--accent-color);
         }
 
+        /* Material Symbols styling */
+        .material-symbols-outlined {
+            font-size: 20px !important;
+        }
+
         .case-btn-lower { text-transform: lowercase; }
         .case-btn-upper { text-transform: uppercase; }
 
-        /* Invisible placeholder to reserve the grid slot under Capitalized */
-        .empty-space {
-            visibility: hidden;
-            pointer-events: none;
+        .history-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
         }
 
-        .copy-btn { border-color: #1b5e20; color: #4caf50; }
+        /* Wrapper containers for individual buttons to anchor their respective dropdowns */
+        .history-btn-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .undo-btn { border-color: #e65100; color: #ffb74d; width: 100%; }
+        .undo-btn:hover { background-color: #e65100; color: #fff; }
+
+        .redo-btn { border-color: #e65100; color: #ffb74d; width: 100%; }
+        .redo-btn:hover { background-color: #e65100; color: #fff; }
+
+        /* Custom Floating History Dropdowns */
+        .history-dropdown {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            width: 220px;
+            background: #1a1a1a;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px;
+            z-index: 100;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+            font-size: 11px;
+            color: #aaa;
+            margin-bottom: 6px;
+        }
+
+        .history-btn-wrapper:hover .history-dropdown {
+            display: block;
+        }
+
+        .history-dropdown ul {
+            margin: 0;
+            padding-left: 15px;
+            text-align: left;
+        }
+
+        .history-dropdown li {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 3px;
+        }
+
+        .history-title {
+            font-weight: bold;
+            color: #ffb74d;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .copy-btn { border-color: #1b5e20; color: #81c784; }
         .copy-btn:hover { background-color: #1b5e20; color: #fff; }
 
-        .download-btn { border-color: #0d47a1; color: #42a5f5; }
+        .download-btn { border-color: #0d47a1; color: #64b5f6; }
         .download-btn:hover { background-color: #0d47a1; color: #fff; }
         
-        .clear-btn { border-color: #b71c1c; color: #ef5350; }
+        .clear-btn { border-color: #b71c1c; color: #e57373; }
         .clear-btn:hover { background-color: #b71c1c; color: #fff; }
 
         .stats {
             margin-top: 15px;
-            font-size: 11px;
-            color: #444;
+            font-size: 12px;
+            font-weight: 500;
+            color: #999;
             text-align: left;
             text-transform: uppercase;
             border-top: 1px solid var(--border-color);
             padding-top: 15px;
+            letter-spacing: 0.5px;
         }
 
-        .count { color: #666; margin-left: 4px; margin-right: 10px; }
+        .count { color: #f0f0f0; margin-left: 6px; margin-right: 16px; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -164,14 +242,33 @@
         <button onclick="titleCase()">Title</button>
         <button onclick="inverseCase()">InVeRsE</button>
         
-        <!-- Row 2 (with 1 blank space below Capitalized, pushing action buttons to the right) -->
+        <!-- Row 2 -->
         <button onclick="sortLines()">Sort Lines</button>
         <button onclick="trimLines()">Trim Lines</button>
         <button onclick="removeBlankLines()">No Blank Lines</button>
-        <div class="empty-space"></div>
-        <button class="copy-btn" onclick="copyText()">📋 Copy</button>
-        <button class="download-btn" onclick="downloadText()">💾 Save</button>
-        <button class="clear-btn" onclick="clearText()">🗑️ Clear</button>
+        
+        <!-- Undo / Redo group with independent dropdowns -->
+        <div class="history-group">
+            <div class="history-btn-wrapper">
+                <button class="undo-btn" onclick="undoText()"><span class="material-symbols-outlined">undo</span></button>
+                <div class="history-dropdown">
+                    <div class="history-title">Undo History</div>
+                    <ul id="undoList"><li>Empty</li></ul>
+                </div>
+            </div>
+            
+            <div class="history-btn-wrapper">
+                <button class="redo-btn" onclick="redoText()"><span class="material-symbols-outlined">redo</span></button>
+                <div class="history-dropdown">
+                    <div class="history-title">Redo History</div>
+                    <ul id="redoList"><li>Empty</li></ul>
+                </div>
+            </div>
+        </div>
+
+        <button class="copy-btn" onclick="copyText()"><span class="material-symbols-outlined">content_copy</span> Copy</button>
+        <button class="download-btn" onclick="downloadText()"><span class="material-symbols-outlined">download</span> Save</button>
+        <button class="clear-btn" onclick="clearText()"><span class="material-symbols-outlined">delete</span> Clear</button>
     </div>
 
     <div class="stats">
@@ -189,11 +286,52 @@
         line: document.getElementById('lineCount')
     };
 
+    let undoStack = [];
+    let redoStack = [];
+    const MAX_HISTORY = 10;
+    const MAX_CHAR_LIMIT = 10000;
+
+    function saveState(newText) {
+        if (newText.length > MAX_CHAR_LIMIT) return;
+
+        if (undoStack.length === 0 || undoStack[undoStack.length - 1] !== newText) {
+            undoStack.push(newText);
+            if (undoStack.length > MAX_HISTORY) {
+                undoStack.shift();
+            }
+            redoStack = [];
+            updateHistoryUI();
+        }
+    }
+
+    function updateHistoryUI() {
+        const undoList = document.getElementById('undoList');
+        const redoList = document.getElementById('redoList');
+
+        const recentUndo = [...undoStack].reverse().slice(1, 11);
+        const recentRedo = [...redoStack].reverse().slice(0, 10);
+
+        undoList.innerHTML = recentUndo.length > 0 
+            ? recentUndo.map(s => `<li>${escapeHtml(s.length > 30 ? s.substring(0, 30) + '...' : s)}</li>`).join("")
+            : "<li>Empty</li>";
+
+        redoList.innerHTML = recentRedo.length > 0 
+            ? recentRedo.map(s => `<li>${escapeHtml(s.length > 30 ? s.substring(0, 30) + '...' : s)}</li>`).join("")
+            : "<li>Empty</li>";
+    }
+
+    function escapeHtml(text) {
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
     if (window.innerHeight > 800) {
         area.style.height = "850px";
     }
 
-    area.addEventListener('input', updateStats);
+    area.addEventListener('input', () => {
+        saveState(area.value);
+        updateStats();
+    });
     
     area.addEventListener('keydown', function(e) {
         if (e.key === 'Tab') {
@@ -203,6 +341,7 @@
 
             this.value = this.value.substring(0, start) + "\t" + this.value.substring(end);
             this.selectionStart = this.selectionEnd = start + 1;
+            saveState(this.value);
             updateStats();
         }
     });
@@ -222,68 +361,102 @@
         counters.line.innerText = val ? val.split(/\n/).length : 0;
     }
 
-    function sentenceCase() {
-        let text = area.value.toLowerCase();
-        area.value = text.replace(/(^\s*\w|[\.\!\?]\s*\w|\n\s*\w)/g, c => c.toUpperCase());
+    function applyChange(newVal) {
+        area.value = newVal;
+        saveState(area.value);
         updateStats();
+    }
+
+    function undoText() {
+        if (undoStack.length > 1) {
+            const currentState = undoStack.pop();
+            redoStack.push(currentState);
+            const previousState = undoStack[undoStack.length - 1];
+            area.value = previousState;
+            updateStats();
+            updateHistoryUI();
+        }
+    }
+
+    function redoText() {
+        if (redoStack.length > 0) {
+            const nextState = redoStack.pop();
+            undoStack.push(nextState);
+            area.value = nextState;
+            updateStats();
+            updateHistoryUI();
+        }
+    }
+
+    function modifySelectionOrAll(transformFn) {
+        const start = area.selectionStart;
+        const end = area.selectionEnd;
+        const val = area.value;
+
+        if (start !== end) {
+            const selectedText = val.substring(start, end);
+            const transformed = transformFn(selectedText);
+            const newVal = val.substring(0, start) + transformed + val.substring(end);
+            
+            applyChange(newVal);
+            area.setSelectionRange(start, start + transformed.length);
+        } else {
+            applyChange(transformFn(val));
+        }
+    }
+
+    function sentenceCase() {
+        modifySelectionOrAll(text => {
+            let lower = text.toLowerCase();
+            return lower.replace(/(^\s*\w|[\.\!\?]\s*\w|\n\s*\w)/g, c => c.toUpperCase());
+        });
     }
 
     function lowerCase() {
-        area.value = area.value.toLowerCase();
-        updateStats();
+        modifySelectionOrAll(text => text.toLowerCase());
     }
 
     function upperCase() {
-        area.value = area.value.toUpperCase();
-        updateStats();
+        modifySelectionOrAll(text => text.toUpperCase());
     }
 
     function capitalizedCase() {
-        area.value = area.value.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
-        updateStats();
+        modifySelectionOrAll(text => text.toLowerCase().replace(/\b\w/g, l => l.toUpperCase()));
     }
 
     function alternatingCase() {
-        area.value = area.value.split("").map((c, i) => i % 2 === 0 ? c.toUpperCase() : c.toLowerCase()).join("");
-        updateStats();
+        modifySelectionOrAll(text => text.split("").map((c, i) => i % 2 === 0 ? c.toUpperCase() : c.toLowerCase()).join(""));
     }
 
     function titleCase() {
-        area.value = area.value.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
-        updateStats();
+        modifySelectionOrAll(text => text.toLowerCase().replace(/\b\w/g, l => l.toUpperCase()));
     }
 
     function inverseCase() {
-        area.value = area.value.split("").map(c => 
-            c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()
-        ).join("");
-        updateStats();
+        modifySelectionOrAll(text => text.split("").map(c => c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()).join(""));
     }
 
     function sortLines() {
         if (!area.value) return;
-        area.value = area.value.split("\n").sort().join("\n");
-        updateStats();
+        modifySelectionOrAll(text => text.split("\n").sort().join("\n"));
     }
 
     function trimLines() {
         if (!area.value) return;
-        area.value = area.value.split("\n").map(line => line.trim()).join("\n");
-        updateStats();
+        modifySelectionOrAll(text => text.split("\n").map(line => line.trim()).join("\n"));
     }
 
     function removeBlankLines() {
         if (!area.value) return;
-        area.value = area.value.split("\n").filter(line => line.trim() !== "").join("\n");
-        updateStats();
+        modifySelectionOrAll(text => text.split("\n").filter(line => line.trim() !== "").join("\n"));
     }
 
     async function copyText() {
         try {
             await navigator.clipboard.writeText(area.value);
             const btn = document.querySelector('.copy-btn');
-            btn.innerText = "COPIED";
-            setTimeout(() => btn.innerText = "📋 Copy", 1000);
+            btn.innerHTML = `<span class="material-symbols-outlined">check</span> COPIED`;
+            setTimeout(() => btn.innerHTML = `<span class="material-symbols-outlined">content_copy</span> Copy`, 1000);
         } catch (err) {}
     }
 
@@ -300,10 +473,12 @@
     }
 
     function clearText() {
-        area.value = "";
-        updateStats();
+        applyChange("");
         area.focus();
     }
+
+    undoStack.push(area.value);
+    updateHistoryUI();
 </script>
 
 </body>
