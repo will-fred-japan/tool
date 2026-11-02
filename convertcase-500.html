@@ -222,6 +222,27 @@
         }
 
         .count { color: #f0f0f0; margin-left: 6px; margin-right: 16px; font-weight: 600; }
+		
+		/* Custom Scrollbar Styling for the Textarea and Page */
+		textarea::-webkit-scrollbar {
+			width: 12px; /* Makes the vertical scrollbar wider (default is usually around 6-8px) */
+		}
+
+		textarea::-webkit-scrollbar-track {
+			background: var(--input-bg);
+			border-radius: 4px;
+		}
+
+		textarea::-webkit-scrollbar-thumb {
+			background: #333; /* Dark thumb color */
+			border-radius: 4px;
+			border: 2px solid var(--input-bg); /* Creates a neat padding effect around the thumb */
+		}
+
+		textarea::-webkit-scrollbar-thumb:hover {
+			background: var(--accent-color); /* Highlights purple when hovered */
+		}
+		
     </style>
 </head>
 <body>
