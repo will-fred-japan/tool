@@ -92,7 +92,7 @@
             line-height: 1.4;
             resize: none; 
             box-sizing: border-box;
-            margin-top: 15px;
+            margin-top: 18px; /* 3px more spacing below top buttons */
             margin-bottom: 1.2rem;
             outline: none;
             transition: border-color 0.2s, height 0.2s;
@@ -306,35 +306,87 @@
 
     let undoStack = [];
     let redoStack = [];
-    const MAX_HISTORY = 10;
+    // Store timestamps corresponding to each state
+    let undoTimestamps = [];
+    let redoTimestamps = [];
+    
+    const MAX_HISTORY = 20;
     const MAX_CHAR_LIMIT = 10000;
+    let typingTimer = null;
 
-    function saveState(newText) {
+    function getTimeString() {
+        const now = new Date();
+        return now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0').substring(0, 2);
+    }
+
+    function saveState(newText, force = false) {
         if (newText.length > MAX_CHAR_LIMIT) return;
 
         if (undoStack.length === 0 || undoStack[undoStack.length - 1] !== newText) {
             undoStack.push(newText);
+            undoTimestamps.push(getTimeString());
+            
             if (undoStack.length > MAX_HISTORY) {
                 undoStack.shift();
+                undoTimestamps.shift();
             }
-            redoStack = [];
+            if (!force) {
+                redoStack = [];
+                redoTimestamps = [];
+            }
             updateHistoryUI();
         }
+    }
+
+    function getDiffSnippet(current, previous) {
+        if (!previous) return current;
+        
+        let start = 0;
+        while (start < current.length && start < previous.length && current[start] === previous[start]) {
+            start++;
+        }
+        
+        let endCurrent = current.length;
+        let endPrevious = previous.length;
+        while (endCurrent > start && endPrevious > start && current[endCurrent - 1] === previous[endPrevious - 1]) {
+            endCurrent--;
+            endPrevious--;
+        }
+
+        const changedPart = current.substring(start, endCurrent);
+        if (changedPart.trim().length > 0) {
+            return changedPart.length > 20 ? changedPart.substring(0, 20) + '...' : changedPart;
+        }
+
+        return current.length > 20 ? current.substring(0, 20) + '...' : (current || '[Empty]');
     }
 
     function updateHistoryUI() {
         const undoList = document.getElementById('undoList');
         const redoList = document.getElementById('redoList');
 
-        const recentUndo = [...undoStack].reverse().slice(1, 11);
-        const recentRedo = [...redoStack].reverse().slice(0, 10);
+        const recentUndo = [];
+        for (let i = undoStack.length - 1; i >= 1; i--) {
+            const diff = getDiffSnippet(undoStack[i], undoStack[i - 1]);
+            recentUndo.push({ time: undoTimestamps[i], text: diff });
+            if (recentUndo.length >= 10) break;
+        }
+
+        const recentRedo = [];
+        for (let i = redoStack.length - 1; i >= 0; i--) {
+            const target = redoStack[i];
+            const base = i === redoStack.length - 1 ? undoStack[undoStack.length - 1] : redoStack[i + 1];
+            const diff = getDiffSnippet(target, base);
+            recentRedo.push({ time: redoTimestamps[i], text: diff });
+            if (recentRedo.length >= 10) break;
+        }
 
         undoList.innerHTML = recentUndo.length > 0 
-            ? recentUndo.map(s => `<li>${escapeHtml(s.length > 30 ? s.substring(0, 30) + '...' : s)}</li>`).join("")
+            ? recentUndo.map(item => `<li><span style="color: #ffb74d; margin-right: 6px; font-family: monospace;">[${item.time}]</span>${escapeHtml(item.text)}</li>`).join("")
             : "<li>Empty</li>";
 
         redoList.innerHTML = recentRedo.length > 0 
-            ? recentRedo.map(s => `<li>${escapeHtml(s.length > 30 ? s.substring(0, 30) + '...' : s)}</li>`).join("")
+            ? recentRedo.map(item => `<li><span style="color: #ffb74d; margin-right: 6px; font-family: monospace;">[${item.time}]</span>${escapeHtml(item.text)}</li>`).join("")
             : "<li>Empty</li>";
     }
 
@@ -347,8 +399,11 @@
     }
 
     area.addEventListener('input', () => {
-        saveState(area.value);
         updateStats();
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+            saveState(area.value);
+        }, 800);
     });
     
     area.addEventListener('keydown', function(e) {
@@ -361,6 +416,28 @@
             this.selectionStart = this.selectionEnd = start + 1;
             saveState(this.value);
             updateStats();
+        } else if (e.ctrlKey || e.metaKey) {
+            if (e.key.toLowerCase() === 'z') {
+                e.preventDefault();
+                clearTimeout(typingTimer);
+                if (undoStack.length === 0 || undoStack[undoStack.length - 1] !== area.value) {
+                    saveState(area.value);
+                }
+
+                if (e.shiftKey) {
+                    redoText();
+                } else {
+                    undoText();
+                }
+            } else if (e.key.toLowerCase() === 'y') {
+                e.preventDefault();
+                clearTimeout(typingTimer);
+                if (undoStack.length === 0 || undoStack[undoStack.length - 1] !== area.value) {
+                    saveState(area.value);
+                }
+
+                redoText();
+            }
         }
     });
 
@@ -381,14 +458,18 @@
 
     function applyChange(newVal) {
         area.value = newVal;
-        saveState(area.value);
+        saveState(area.value, true);
         updateStats();
     }
 
     function undoText() {
         if (undoStack.length > 1) {
             const currentState = undoStack.pop();
+            const currentTime = undoTimestamps.pop();
+            
             redoStack.push(currentState);
+            redoTimestamps.push(currentTime);
+            
             const previousState = undoStack[undoStack.length - 1];
             area.value = previousState;
             updateStats();
@@ -399,7 +480,11 @@
     function redoText() {
         if (redoStack.length > 0) {
             const nextState = redoStack.pop();
+            const nextTime = redoTimestamps.pop();
+            
             undoStack.push(nextState);
+            undoTimestamps.push(nextTime);
+            
             area.value = nextState;
             updateStats();
             updateHistoryUI();
@@ -495,7 +580,9 @@
         area.focus();
     }
 
+    // Initial baseline state
     undoStack.push(area.value);
+    undoTimestamps.push(getTimeString());
     updateHistoryUI();
 </script>
 
