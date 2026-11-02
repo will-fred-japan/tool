@@ -81,7 +81,7 @@
 
         textarea {
             width: 100%;
-            height: 450px;
+            height: 460px; /* Exactly 20 lines (420px inner / 21px line height) */
             padding: 20px;
             background-color: var(--input-bg);
             color: #f0f0f0;
@@ -90,7 +90,7 @@
             font-family: 'JetBrains Mono', monospace;
             font-size: 15px;
             line-height: 1.4;
-            resize: vertical;
+            resize: none; 
             box-sizing: border-box;
             margin-top: 15px;
             margin-bottom: 1.2rem;
@@ -99,6 +99,26 @@
         }
 
         textarea:focus { border-color: #555; }
+
+        /* Custom 24px scrollbar width with clean styling */
+        textarea::-webkit-scrollbar {
+            width: 24px;
+        }
+
+        textarea::-webkit-scrollbar-track {
+            background: var(--input-bg);
+            border-radius: 4px;
+        }
+
+        textarea::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 6px;
+            border: 6px solid var(--input-bg);
+        }
+
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-color);
+        }
 
         .controls {
             display: grid;
@@ -144,7 +164,6 @@
             gap: 4px;
         }
 
-        /* Wrapper containers for individual buttons to anchor their respective dropdowns */
         .history-btn-wrapper {
             position: relative;
             width: 100%;
@@ -156,13 +175,12 @@
         .redo-btn { border-color: #e65100; color: #ffb74d; width: 100%; }
         .redo-btn:hover { background-color: #e65100; color: #fff; }
 
-        /* Custom Floating History Dropdowns */
         .history-dropdown {
             display: none;
             position: absolute;
             bottom: 100%;
             left: 0;
-            width: 220px;
+            width: 240px;
             background: #1a1a1a;
             border: 1px solid var(--border-color);
             border-radius: 6px;
@@ -222,27 +240,6 @@
         }
 
         .count { color: #f0f0f0; margin-left: 6px; margin-right: 16px; font-weight: 600; }
-		
-		/* Custom Scrollbar Styling for the Textarea and Page */
-		textarea::-webkit-scrollbar {
-			width: 12px; /* Makes the vertical scrollbar wider (default is usually around 6-8px) */
-		}
-
-		textarea::-webkit-scrollbar-track {
-			background: var(--input-bg);
-			border-radius: 4px;
-		}
-
-		textarea::-webkit-scrollbar-thumb {
-			background: #333; /* Dark thumb color */
-			border-radius: 4px;
-			border: 2px solid var(--input-bg); /* Creates a neat padding effect around the thumb */
-		}
-
-		textarea::-webkit-scrollbar-thumb:hover {
-			background: var(--accent-color); /* Highlights purple when hovered */
-		}
-		
     </style>
 </head>
 <body>
@@ -346,7 +343,7 @@
     }
 
     if (window.innerHeight > 800) {
-        area.style.height = "850px";
+        area.style.height = "880px"; // Exactly 40 lines
     }
 
     area.addEventListener('input', () => {
@@ -368,10 +365,10 @@
     });
 
     function toggleHeight() {
-        if (area.style.height === "800px") {
-            area.style.height = "450px";
+        if (area.style.height === "880px") {
+            area.style.height = "460px";
         } else {
-            area.style.height = "800px";
+            area.style.height = "880px";
         }
     }
 
