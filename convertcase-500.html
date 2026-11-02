@@ -52,7 +52,6 @@
             border-color: var(--accent-color);
         }
 
-        /* Added style for the expand button positioned at the top-right */
         .expand-btn {
             position: absolute;
             top: 10px;
@@ -80,13 +79,13 @@
             border: 1px solid var(--border-color);
             border-radius: 2px;
             font-size: 16px;
-            line-height: 1.1; /* Further reduced line height */
+            line-height: 1.1;
             resize: vertical;
             box-sizing: border-box;
             margin-top: 15px;
             margin-bottom: 1.2rem;
             outline: none;
-            transition: border-color 0.2s, height 0.2s; /* Added height transition for a smooth stretch */
+            transition: border-color 0.2s, height 0.2s;
         }
 
         textarea:focus { border-color: #444; }
@@ -106,7 +105,6 @@
             border: 1px solid var(--border-color);
             border-radius: 2px;
             font-size: 12px;
-            /* Removed text-transform: uppercase to allow 'lower' to stay lowercase */
             letter-spacing: 1px;
             transition: all 0.15s;
         }
@@ -117,21 +115,22 @@
             border-color: var(--accent-color);
         }
 
-        /* Specific fix to ensure 'lower' stays lowercase and 'UPPER' stays uppercase */
         .case-btn-lower { text-transform: lowercase; }
         .case-btn-upper { text-transform: uppercase; }
 
-        .action-btns {
-            display: flex;
-            gap: 8px;
-            padding-top: 15px;
-            border-top: 1px solid var(--border-color);
+        /* Invisible placeholder to reserve the grid slot under Capitalized */
+        .empty-space {
+            visibility: hidden;
+            pointer-events: none;
         }
 
-        .copy-btn { border-color: #1b5e20; color: #4caf50; flex: 3; }
+        .copy-btn { border-color: #1b5e20; color: #4caf50; }
         .copy-btn:hover { background-color: #1b5e20; color: #fff; }
+
+        .download-btn { border-color: #0d47a1; color: #42a5f5; }
+        .download-btn:hover { background-color: #0d47a1; color: #fff; }
         
-        .clear-btn { border-color: #b71c1c; color: #ef5350; flex: 1; }
+        .clear-btn { border-color: #b71c1c; color: #ef5350; }
         .clear-btn:hover { background-color: #b71c1c; color: #fff; }
 
         .stats {
@@ -140,6 +139,8 @@
             color: #444;
             text-align: left;
             text-transform: uppercase;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
         }
 
         .count { color: #666; margin-left: 4px; margin-right: 10px; }
@@ -154,6 +155,7 @@
     <textarea id="textInput" placeholder="READY FOR INPUT..."></textarea>
     
     <div class="controls">
+        <!-- Row 1 -->
         <button onclick="sentenceCase()">Sentence</button>
         <button class="case-btn-lower" onclick="lowerCase()">lower</button>
         <button class="case-btn-upper" onclick="upperCase()">UPPER</button>
@@ -161,10 +163,14 @@
         <button onclick="alternatingCase()">aLtErNaTe</button>
         <button onclick="titleCase()">Title</button>
         <button onclick="inverseCase()">InVeRsE</button>
-    </div>
-
-    <div class="action-btns">
+        
+        <!-- Row 2 (with 1 blank space below Capitalized, pushing action buttons to the right) -->
+        <button onclick="sortLines()">Sort Lines</button>
+        <button onclick="trimLines()">Trim Lines</button>
+        <button onclick="removeBlankLines()">No Blank Lines</button>
+        <div class="empty-space"></div>
         <button class="copy-btn" onclick="copyText()">📋 Copy</button>
+        <button class="download-btn" onclick="downloadText()">💾 Save</button>
         <button class="clear-btn" onclick="clearText()">🗑️ Clear</button>
     </div>
 
@@ -183,14 +189,24 @@
         line: document.getElementById('lineCount')
     };
 
-    // Auto-expand on load if viewport height is greater than 800px
     if (window.innerHeight > 800) {
         area.style.height = "850px";
     }
 
     area.addEventListener('input', updateStats);
+    
+    area.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const start = this.selectionStart;
+            const end = this.selectionEnd;
 
-    // Function to double/reset the textarea height
+            this.value = this.value.substring(0, start) + "\t" + this.value.substring(end);
+            this.selectionStart = this.selectionEnd = start + 1;
+            updateStats();
+        }
+    });
+
     function toggleHeight() {
         if (area.style.height === "800px") {
             area.style.height = "450px";
@@ -244,6 +260,24 @@
         updateStats();
     }
 
+    function sortLines() {
+        if (!area.value) return;
+        area.value = area.value.split("\n").sort().join("\n");
+        updateStats();
+    }
+
+    function trimLines() {
+        if (!area.value) return;
+        area.value = area.value.split("\n").map(line => line.trim()).join("\n");
+        updateStats();
+    }
+
+    function removeBlankLines() {
+        if (!area.value) return;
+        area.value = area.value.split("\n").filter(line => line.trim() !== "").join("\n");
+        updateStats();
+    }
+
     async function copyText() {
         try {
             await navigator.clipboard.writeText(area.value);
@@ -251,6 +285,18 @@
             btn.innerText = "COPIED";
             setTimeout(() => btn.innerText = "📋 Copy", 1000);
         } catch (err) {}
+    }
+
+    function downloadText() {
+        const blob = new Blob([area.value], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'document.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     }
 
     function clearText() {
