@@ -31,7 +31,8 @@
             width: 100%;
             max-width: 1000px;
             background: var(--container-bg);
-            padding: 1.5rem;
+            padding: 12px;
+            padding-top: 42px; /* Safe space above textarea for the top buttons */
             border-radius: 8px;
             border: 1px solid var(--border-color);
             position: relative;
@@ -40,7 +41,7 @@
         .new-tab-btn {
             position: absolute;
             top: 12px;
-            left: 12px;
+            left: 12px; /* Aligned precisely with textarea's left edge */
             padding: 5px 10px;
             font-size: 11px;
             font-weight: 500;
@@ -61,7 +62,7 @@
         .expand-btn {
             position: absolute;
             top: 12px;
-            right: 12px;
+            right: 12px; /* Aligned precisely with textarea's right edge */
             padding: 5px 10px;
             font-size: 11px;
             font-weight: 500;
@@ -92,7 +93,7 @@
             line-height: 1.4;
             resize: none; 
             box-sizing: border-box;
-            margin-top: 18px; /* 3px more spacing below top buttons */
+            margin-top: 0; /* Reset since container padding handles the spacing */
             margin-bottom: 1.2rem;
             outline: none;
             transition: border-color 0.2s, height 0.2s;
@@ -306,11 +307,10 @@
 
     let undoStack = [];
     let redoStack = [];
-    // Store timestamps corresponding to each state
     let undoTimestamps = [];
     let redoTimestamps = [];
     
-    const MAX_HISTORY = 20;
+    const MAX_HISTORY = 10;
     const MAX_CHAR_LIMIT = 10000;
     let typingTimer = null;
 
@@ -369,7 +369,7 @@
         for (let i = undoStack.length - 1; i >= 1; i--) {
             const diff = getDiffSnippet(undoStack[i], undoStack[i - 1]);
             recentUndo.push({ time: undoTimestamps[i], text: diff });
-            if (recentUndo.length >= 10) break;
+            if (recentUndo.length >= MAX_HISTORY) break;
         }
 
         const recentRedo = [];
@@ -378,7 +378,7 @@
             const base = i === redoStack.length - 1 ? undoStack[undoStack.length - 1] : redoStack[i + 1];
             const diff = getDiffSnippet(target, base);
             recentRedo.push({ time: redoTimestamps[i], text: diff });
-            if (recentRedo.length >= 10) break;
+            if (recentRedo.length >= MAX_HISTORY) break;
         }
 
         undoList.innerHTML = recentUndo.length > 0 
@@ -403,7 +403,7 @@
         clearTimeout(typingTimer);
         typingTimer = setTimeout(() => {
             saveState(area.value);
-        }, 800);
+        }, 400);
     });
     
     area.addEventListener('keydown', function(e) {
@@ -580,7 +580,6 @@
         area.focus();
     }
 
-    // Initial baseline state
     undoStack.push(area.value);
     undoTimestamps.push(getTimeString());
     updateHistoryUI();
